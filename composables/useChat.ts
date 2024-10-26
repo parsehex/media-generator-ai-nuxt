@@ -28,7 +28,6 @@ export default function useChat(options?: UseChatOptions) {
 
 	const controller = new AbortController();
 
-	// getter setter for the first message's content
 	const sysPrompt = computed({
 		get: () => messages.value[0]?.content,
 		set: (value: string) => {
@@ -37,7 +36,6 @@ export default function useChat(options?: UseChatOptions) {
 	});
 
 	async function handleSubmit(e: Event | null, skipUserMsg = false) {
-		// construct message obj, add to messages
 		if (!skipUserMsg) {
 			const userMsg = {
 				id: v4(),
@@ -52,7 +50,7 @@ export default function useChat(options?: UseChatOptions) {
 		e?.preventDefault();
 
 		isLoading.value = true;
-		// send new messages to server, create assistant message\
+		// send new messages to server, create assistant message
 		const msg = ref({
 			created: Date.now(),
 			updated: null,
@@ -128,10 +126,8 @@ export default function useChat(options?: UseChatOptions) {
 
 		messages.value = newMessages;
 
-		// Resend the messages to get a new response
 		await handleSubmit(new Event('reload'), true);
 
-		// Add the other messages back
 		messages.value.push(...otherMessages);
 	}
 
@@ -141,11 +137,38 @@ export default function useChat(options?: UseChatOptions) {
 	}
 
 	function append(message: ChatMessage) {
-		// add message and submit
 		messages.value.push(message);
 		handleSubmit(new Event('append'), true);
 	}
 
+	function deleteMessage(messageToDelete: ChatMessage) {
+		const index = messages.value.findIndex(
+			(msg) => msg.id === messageToDelete.id
+		);
+		if (index === -1) {
+			throw new Error('Message not found');
+		}
+
+		const role = messageToDelete.role;
+		if (role === 'system') {
+			throw new Error('Cannot delete system message');
+		}
+
+		messages.value.splice(index, 1);
+
+		const nextMsg = messages.value[index];
+		const prevMsg = messages.value[index - 1];
+
+		if (messageToDelete.role === 'user' && nextMsg?.role === 'assistant') {
+			messages.value.splice(index, 1);
+		}
+
+		if (messageToDelete.role === 'assistant' && prevMsg?.role === 'user') {
+			messages.value.splice(index - 1, 1);
+		}
+	}
+
+	// useChat init
 	if (options?.initialMessages) {
 		setMessages(options.initialMessages);
 	}
@@ -167,5 +190,6 @@ export default function useChat(options?: UseChatOptions) {
 		isLoading,
 		stop,
 		append,
+		deleteMessage,
 	};
 }

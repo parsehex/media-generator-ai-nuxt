@@ -3,9 +3,10 @@ import { ref, onMounted, nextTick } from 'vue';
 import useChat from '@/composables/useChat';
 import type { ChatMessage } from '~/types';
 
-const { messages, handleSubmit, input, sysPrompt, reload } = useChat({
-	baseUrl: 'http://localhost:5001',
-});
+const { messages, handleSubmit, input, sysPrompt, reload, deleteMessage } =
+	useChat({
+		baseUrl: 'http://localhost:5001',
+	});
 const chatContainer = ref<HTMLElement | null>(null);
 
 const sendMessage = async () => {
@@ -23,6 +24,22 @@ const reloadMessage = async (message: ChatMessage) => {
 		await reload(message);
 	} catch (error) {
 		console.error('Failed to reload message:', error);
+	}
+};
+
+const removeMessage = async (message: ChatMessage) => {
+	try {
+		deleteMessage(message);
+	} catch (error) {
+		console.error('Failed to delete message:', error);
+	}
+};
+
+const copyToClipboard = async (msg: ChatMessage) => {
+	try {
+		await navigator.clipboard.writeText(msg.content);
+	} catch (error) {
+		console.error('Failed to copy text:', error);
 	}
 };
 
@@ -64,11 +81,25 @@ onMounted(() => {
 				<div class="flex gap-2 text-sm text-gray-500">
 					<span class="font-semibold">{{ msg.role }}</span>
 					<button
+						v-if="msg.role !== 'system'"
+						@click="copyToClipboard(msg)"
+						class="text-green-500 hover:text-green-700"
+					>
+						Copy
+					</button>
+					<button
 						v-if="msg.role === 'assistant'"
 						@click="reloadMessage(msg)"
 						class="text-blue-500 hover:text-blue-700"
 					>
 						Reload
+					</button>
+					<button
+						v-if="msg.role !== 'system'"
+						@click="removeMessage(msg)"
+						class="text-red-500 hover:text-red-700"
+					>
+						Delete
 					</button>
 				</div>
 				<div class="bg-gray-100 p-3 rounded mt-1 dark:bg-gray-800">
