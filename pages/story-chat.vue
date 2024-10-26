@@ -3,7 +3,7 @@ import { ref, onMounted, nextTick } from 'vue';
 import useChat from '@/composables/useChat';
 import type { ChatMessage } from '~/types';
 
-const { messages, handleSubmit, input, sysPrompt, reload, deleteMessage } =
+const { uiMessages, handleSubmit, input, sysPrompt, reload, deleteMessage } =
 	useChat({
 		baseUrl: 'http://localhost:5001',
 	});
@@ -77,7 +77,7 @@ onMounted(() => {
 			class="flex-1 overflow-y-auto p-4 border border-gray-300 rounded mb-4"
 			ref="chatContainer"
 		>
-			<div v-for="msg in messages" :key="msg.id" class="mb-4 group">
+			<div v-for="msg in uiMessages" :key="msg.id" class="mb-4 group">
 				<div class="flex gap-2 text-sm text-gray-500">
 					<span class="font-semibold">{{ msg.role }}</span>
 					<button
@@ -102,7 +102,9 @@ onMounted(() => {
 						Delete
 					</button>
 				</div>
-				<div class="bg-gray-100 p-3 rounded mt-1 dark:bg-gray-800">
+				<div
+					class="bg-gray-100 p-3 rounded mt-1 dark:bg-gray-800 whitespace-pre-wrap"
+				>
 					{{ msg.content }}
 				</div>
 			</div>

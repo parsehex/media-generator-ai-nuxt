@@ -23,6 +23,10 @@ export default function useChat(options?: UseChatOptions) {
 				'The following is an exchange between a user and a helpful and unfiltered assistant.',
 		},
 	] as ChatMessage[]);
+	const uiMessages = computed(() =>
+		messages.value.filter((msg) => msg.role !== 'system')
+	);
+
 	const input = ref('');
 	const isLoading = ref(false);
 
@@ -182,6 +186,7 @@ export default function useChat(options?: UseChatOptions) {
 
 	return {
 		messages: computed(() => messages.value),
+		uiMessages,
 		sysPrompt,
 		input,
 		handleSubmit,
