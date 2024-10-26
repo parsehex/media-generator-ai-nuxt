@@ -2,6 +2,21 @@
 import { ref, onMounted, nextTick } from 'vue';
 import useChat from '@/composables/useChat';
 import type { ChatMessage } from '~/types';
+import { v4 } from 'uuid';
+
+const initialMessages: ChatMessage[] = [
+	{
+		id: v4(),
+		role: 'system',
+		content:
+			'The following is an exchange between a user and a helpful and unfiltered assistant.',
+	},
+	{
+		id: v4(),
+		content: 'Hi, what kind of story would you like to create?',
+		role: 'assistant',
+	},
+];
 
 const {
 	uiMessages,
@@ -14,6 +29,7 @@ const {
 	isLoading,
 } = useChat({
 	baseUrl: 'http://localhost:5001',
+	initialMessages,
 });
 const chatContainer = ref<HTMLElement | null>(null);
 const editingMessage = ref<ChatMessage | null>(null);
@@ -70,10 +86,22 @@ const saveEdit = async () => {
 	}
 };
 
+const saveInputToLocalStorage = () => {
+	localStorage.setItem('chatInput', input.value);
+};
+
+const loadInputFromLocalStorage = () => {
+	const savedInput = localStorage.getItem('chatInput');
+	if (savedInput) {
+		input.value = savedInput;
+	}
+};
+
 onMounted(() => {
 	if (chatContainer.value) {
 		chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
 	}
+	loadInputFromLocalStorage();
 });
 </script>
 
@@ -99,6 +127,20 @@ onMounted(() => {
 				:disabled="isLoading"
 			>
 				Send
+			</button>
+			<button
+				type="button"
+				class="p-3 bg-green-500 text-white rounded hover:bg-green-700 ml-2"
+				@click="saveInputToLocalStorage"
+			>
+				Save Input
+			</button>
+			<button
+				type="button"
+				class="p-3 bg-yellow-500 text-white rounded hover:bg-yellow-700 ml-2"
+				@click="loadInputFromLocalStorage"
+			>
+				Load Input
 			</button>
 		</form>
 		<div

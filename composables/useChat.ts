@@ -15,14 +15,7 @@ const BASE_URL = 'http://localhost:8080';
 export default function useChat(options?: UseChatOptions) {
 	const BaseUrl = ref('');
 
-	const messages = ref([
-		{
-			id: v4(),
-			role: 'system',
-			content:
-				'The following is an exchange between a user and a helpful and unfiltered assistant.',
-		},
-	] as ChatMessage[]);
+	const messages = ref([] as ChatMessage[]);
 	const uiMessages = computed(() =>
 		messages.value.filter((msg) => msg.role !== 'system')
 	);
@@ -97,10 +90,12 @@ export default function useChat(options?: UseChatOptions) {
 						isLast = true;
 					}
 				}
-				msg.value.content = content;
+				msg.value.content = content.trim();
 
 				if (isLast) {
 					isLoading.value = false;
+					// TODO detect and fix cut off messages
+
 					if (options?.onFinish) {
 						options.onFinish(messages.value);
 					}
