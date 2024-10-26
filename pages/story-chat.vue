@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue';
 import useChat from '@/composables/useChat';
+import type { ChatMessage } from '~/types';
 
-const { messages, handleSubmit, input, sysPrompt } = useChat({
+const { messages, handleSubmit, input, sysPrompt, reload } = useChat({
 	baseUrl: 'http://localhost:5001',
 });
 const chatContainer = ref<HTMLElement | null>(null);
@@ -15,6 +16,14 @@ const sendMessage = async () => {
 			chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
 		}
 	});
+};
+
+const reloadMessage = async (message: ChatMessage) => {
+	try {
+		await reload(message);
+	} catch (error) {
+		console.error('Failed to reload message:', error);
+	}
 };
 
 onMounted(() => {
@@ -51,9 +60,16 @@ onMounted(() => {
 			class="flex-1 overflow-y-auto p-4 border border-gray-300 rounded mb-4"
 			ref="chatContainer"
 		>
-			<div v-for="msg in messages" :key="msg.id" class="mb-4">
-				<div class="flex justify-between text-sm text-gray-500">
+			<div v-for="msg in messages" :key="msg.id" class="mb-4 group">
+				<div class="flex gap-2 text-sm text-gray-500">
 					<span class="font-semibold">{{ msg.role }}</span>
+					<button
+						v-if="msg.role === 'assistant'"
+						@click="reloadMessage(msg)"
+						class="text-blue-500 hover:text-blue-700"
+					>
+						Reload
+					</button>
 				</div>
 				<div class="bg-gray-100 p-3 rounded mt-1 dark:bg-gray-800">
 					{{ msg.content }}
@@ -62,3 +78,9 @@ onMounted(() => {
 		</div>
 	</div>
 </template>
+
+<style scoped>
+.group:hover .group-hover\:inline-block {
+	display: inline-block;
+}
+</style>

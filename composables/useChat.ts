@@ -2,12 +2,6 @@ import { ref, computed } from 'vue';
 import axios from 'axios';
 import { v4 } from 'uuid';
 
-interface ChatMessage {
-	id: string;
-	role: 'user' | 'assistant' | 'system';
-	content: string;
-}
-
 interface UseChatOptions {
 	initialMessages?: ChatMessage[];
 	body?: Record<string, unknown>;
@@ -117,9 +111,28 @@ export default function useChat(options?: UseChatOptions) {
 		messages.value = newMessages;
 	}
 
-	async function reload() {
-		messages.value.pop();
+	async function reload(messageToReload: ChatMessage) {
+		if (messageToReload.role !== 'assistant') {
+			throw new Error('Can only reload assistant messages');
+		}
+
+		const index = messages.value.findIndex(
+			(msg) => msg.id === messageToReload.id
+		);
+		if (index === -1) {
+			throw new Error('Message not found');
+		}
+
+		const newMessages = messages.value.slice(0, index);
+		const otherMessages = messages.value.slice(index + 1);
+
+		messages.value = newMessages;
+
+		// Resend the messages to get a new response
 		await handleSubmit(new Event('reload'), true);
+
+		// Add the other messages back
+		messages.value.push(...otherMessages);
 	}
 
 	function stop() {
