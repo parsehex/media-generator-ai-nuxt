@@ -172,6 +172,20 @@ export default function useChat(options?: UseChatOptions) {
 		}
 	}
 
+	function editMessage(messageId: string, newContent: string) {
+		const index = messages.value.findIndex((msg) => msg.id === messageId);
+		if (index === -1) {
+			throw new Error('Message not found');
+		}
+
+		const role = messages.value[index].role;
+		if (role === 'system') {
+			throw new Error('Cannot edit system message');
+		}
+
+		messages.value[index].content = newContent;
+	}
+
 	// useChat init
 	if (options?.initialMessages) {
 		setMessages(options.initialMessages);
@@ -196,5 +210,6 @@ export default function useChat(options?: UseChatOptions) {
 		stop,
 		append,
 		deleteMessage,
+		editMessage,
 	};
 }

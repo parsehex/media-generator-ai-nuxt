@@ -3,11 +3,21 @@ import { ref, onMounted, nextTick } from 'vue';
 import useChat from '@/composables/useChat';
 import type { ChatMessage } from '~/types';
 
-const { uiMessages, handleSubmit, input, sysPrompt, reload, deleteMessage } =
-	useChat({
-		baseUrl: 'http://localhost:5001',
-	});
+const {
+	uiMessages,
+	handleSubmit,
+	input,
+	sysPrompt,
+	reload,
+	deleteMessage,
+	editMessage,
+	isLoading,
+} = useChat({
+	baseUrl: 'http://localhost:5001',
+});
 const chatContainer = ref<HTMLElement | null>(null);
+const editingMessage = ref<ChatMessage | null>(null);
+const editedContent = ref<string>('');
 
 const sendMessage = async () => {
 	if (input.value.trim() === '') return;
@@ -43,6 +53,23 @@ const copyToClipboard = async (msg: ChatMessage) => {
 	}
 };
 
+const startEditing = (message: ChatMessage) => {
+	editingMessage.value = message;
+	editedContent.value = message.content;
+};
+
+const saveEdit = async () => {
+	if (editingMessage.value) {
+		try {
+			await editMessage(editingMessage.value.id, editedContent.value);
+			editingMessage.value = null;
+			editedContent.value = '';
+		} catch (error) {
+			console.error('Failed to edit message:', error);
+		}
+	}
+};
+
 onMounted(() => {
 	if (chatContainer.value) {
 		chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
@@ -69,6 +96,7 @@ onMounted(() => {
 			<button
 				type="submit"
 				class="p-3 bg-blue-500 text-white rounded hover:bg-blue-700"
+				:disabled="isLoading"
 			>
 				Send
 			</button>
@@ -80,6 +108,13 @@ onMounted(() => {
 			<div v-for="msg in uiMessages" :key="msg.id" class="mb-4 group">
 				<div class="flex gap-2 text-sm text-gray-500">
 					<span class="font-semibold">{{ msg.role }}</span>
+					<button
+						v-if="msg.role === 'user'"
+						@click="startEditing(msg)"
+						class="text-blue-500 hover:text-blue-700"
+					>
+						Edit
+					</button>
 					<button
 						v-if="msg.role !== 'system'"
 						@click="copyToClipboard(msg)"
@@ -102,7 +137,21 @@ onMounted(() => {
 						Delete
 					</button>
 				</div>
+				<div v-if="editingMessage && editingMessage.id === msg.id" class="mt-1">
+					<input
+						v-model="editedContent"
+						type="text"
+						class="w-full p-2 border border-gray-300 rounded dark:bg-gray-800"
+					/>
+					<button
+						@click="saveEdit"
+						class="mt-2 p-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+					>
+						Save
+					</button>
+				</div>
 				<div
+					v-else
 					class="bg-gray-100 p-3 rounded mt-1 dark:bg-gray-800 whitespace-pre-wrap"
 				>
 					{{ msg.content }}
