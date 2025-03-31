@@ -18,6 +18,7 @@ const availableLocales = computed<LocaleObject[]>(() => {
 const headerLinks = computed<Link[]>(() =>
 	[
 		{ name: 'linkGroups.0.links.0', to: '/' },
+		{ name: 'linkGroups.0.links.3', to: '/chat' },
 		{ name: 'linkGroups.0.links.2', to: '/story-chat' },
 		// { name: "linkGroups.0.links.1", to: "/error" },
 	].map(({ name, to }) => ({

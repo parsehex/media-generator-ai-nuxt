@@ -19,7 +19,7 @@ export default {
 	linkGroups: [
 		{
 			name: 'Navigation',
-			links: ['Home', 'Error Page', 'Story Chat'],
+			links: ['Home', 'Error Page', 'Story Chat', 'Chat'],
 		},
 	],
 	footer: {

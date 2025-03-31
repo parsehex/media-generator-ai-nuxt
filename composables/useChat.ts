@@ -8,6 +8,8 @@ interface UseChatOptions {
 	onFinish?: (messages: ChatMessage[]) => void;
 	onError?: (error: Error) => void;
 	baseUrl?: string;
+	maxTokens?: number;
+	temp?: number;
 }
 
 const BASE_URL = 'http://localhost:8080';
@@ -49,15 +51,9 @@ export default function useChat(options?: UseChatOptions) {
 		isLoading.value = true;
 		// send new messages to server, create assistant message
 		const msg = ref({
-			created: Date.now(),
-			updated: null,
 			id: v4(),
 			role: 'assistant',
 			content: '',
-			image: null,
-			tts: null,
-			thread_id: '',
-			thread_index: 0,
 		} as ChatMessage);
 		messages.value.push(msg.value);
 		await axios({
@@ -67,7 +63,13 @@ export default function useChat(options?: UseChatOptions) {
 				'Content-Type': 'application/json',
 			},
 			signal: controller.signal,
-			data: { ...options?.body, messages: messages.value, stream: true },
+			data: {
+				...options?.body,
+				messages: messages.value,
+				stream: true,
+				max_tokens: options?.maxTokens,
+				temperature: options?.temp,
+			},
 			onDownloadProgress: (progressEvent) => {
 				const xhr = progressEvent.event.target;
 				const { responseText } = xhr;
